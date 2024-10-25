@@ -1,0 +1,1158 @@
+Write a program to give a solution to the procedure consumer problem using shared memory
+
+
+
+import threading
+
+import queue
+
+# Create a queue to hold produced items
+
+sq = queue.Queue()
+
+class Producer(threading.Thread):
+
+    def run(self):
+
+        for i in range(5):
+
+            item = f"item{i}"
+
+            sq.put(item)
+
+            print(f"Produced {item}")
+
+        # Signal the consumer to stop
+
+        sq.put(None)
+
+class Consumer(threading.Thread):
+
+    def run(self):
+
+        while True:
+
+            item = sq.get()
+
+            if item is None:
+
+                break
+
+            print(f"Consumed {item}")
+
+# Create producer and consumer instances
+
+p = Producer()
+
+c = Consumer()
+
+# Start the producer and consumer threads
+
+p.start()
+
+c.start()
+
+# Wait for both threads to finish
+
+p.join()
+
+c.join()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Write a program to give a solution to the producer consumer problem using message passing
+
+from multiprocessing import Process, Queue
+
+import time
+
+
+
+def producer(queue):
+
+    for i in range(5):
+
+        item = f"Item {i + 1}"
+
+        queue.put(item)
+
+        print(f"Producer produced {item}")
+
+        time.sleep(1)
+
+
+
+def consumer(queue):
+
+    while True:
+
+        item = queue.get()
+
+        if item is None:
+
+            break
+
+        print(f"Consumer consumed {item}")
+
+        time.sleep(2)
+
+
+
+if __name__ == '__main__':
+
+    queue = Queue()
+
+    producer_process = Process(target=producer, args=(queue,))
+
+    consumer_process = Process(target=consumer, args=(queue,))
+
+
+
+    producer_process.start()
+
+    consumer_process.start()
+
+
+
+    producer_process.join()
+
+    queue.put(None)  # Signal the consumer to stop
+
+    consumer_process.join()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Write a program to work with a single thread
+
+import time
+
+
+
+def task(name, delay):
+
+    print(f"Task '{name}' started")
+
+    time.sleep(delay)
+
+    print(f"Task '{name}' completed")
+
+
+
+def main():
+
+    print("Main program started")
+
+    task("Task1", 2)
+
+    task("Task2", 1)
+
+    task("Task3", 3)
+
+    print("Main program completed")
+
+
+
+if __name__ == "__main__":
+
+    main()
+
+
+
+**********************************************************************
+
+Write a program to work with multi thread
+
+import threading
+
+import time
+
+
+
+def task(name, delay):
+
+    print(f"Task '{name}' started")
+
+    time.sleep(delay)
+
+    print(f"Task '{name}' completed")
+
+
+
+def main():
+
+    print("Main program started")
+
+    tasks = [
+
+        ("Task 1", 2),
+
+        ("Task 2", 1),
+
+        ("Task 3", 3)
+
+    ]
+
+    
+
+    threads = []
+
+    
+
+    for name, delay in tasks:
+
+        thread = threading.Thread(target=task, args=(name, delay))
+
+        thread.start()
+
+        threads.append(thread)
+
+
+
+    for thread in threads:
+
+        thread.join()
+
+
+
+    print("Main program completed")
+
+
+
+if __name__ == "__main__":
+
+    main()
+
+
+
+
+
+
+
+The Fibonacci sequence is the series of numbers....
+
+import threading
+
+
+
+class FibonacciThread(threading.Thread):
+
+    def __init__(self, n):
+
+        threading.Thread.__init__(self)
+
+        self.n = n
+
+
+
+    def run(self):
+
+        fib_sequence = self.generate_fibonacci(self.n)
+
+        print(f"Fibonacci sequence for {self.n}: {fib_sequence}")
+
+
+
+    def generate_fibonacci(self, n):
+
+        fib_sequence = [0, 1]
+
+        for i in range(2, n):
+
+            fib_sequence.append(fib_sequence[i - 1] + fib_sequence[i - 2])
+
+        return fib_sequence
+
+
+
+if __name__ == "__main__":
+
+    n1 = 5
+
+    n2 = 10
+
+    
+
+    thread1 = FibonacciThread(n1)
+
+    thread2 = FibonacciThread(n2)
+
+
+
+    thread1.start()
+
+    thread2.start()
+
+    
+
+    thread1.join()
+
+    thread2.join()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Write a program to give a solution to the bounded buffer problem
+
+
+
+import threading
+
+import time
+
+CAPACITY = 5
+
+buffer = [-1 for _ in range(CAPACITY)]
+
+in_index = 0
+
+out_index = 0
+
+# Semaphores for synchronization
+
+mutex = threading.Semaphore(1)
+
+empty = threading.Semaphore(CAPACITY)
+
+full = threading.Semaphore(0)
+
+class Producer(threading.Thread):
+
+    def run(self):
+
+        global CAPACITY, buffer, in_index, mutex, empty, full
+
+        item_produced = 0
+
+        counter = 0
+
+        while item_produced < 5:
+
+            empty.acquire()  # Wait if buffer is full
+
+            mutex.acquire()  # Lock for mutual exclusion
+
+            # Produce an item and add to buffer
+
+            counter += 1
+
+            buffer[in_index] = counter
+
+            print("Producer produced:", counter)
+
+            in_index = (in_index + 1) % CAPACITY
+
+            mutex.release()  # Release the lock
+
+            full.release()   # Signal that buffer has at least one item
+
+            time.sleep(1)
+
+            item_produced += 1
+
+class Consumer(threading.Thread):
+
+    def run(self):
+
+        global CAPACITY, buffer, out_index, mutex, empty, full
+
+        item_consumed = 0
+
+        while item_consumed < 5:
+
+            full.acquire()   # Wait if buffer is empty
+
+            mutex.acquire()  # Lock for mutual exclusion
+
+            
+
+            # Consume an item from the buffer
+
+            item = buffer[out_index]
+
+            print("Consumer consumed item:", item)
+
+            out_index = (out_index + 1) % CAPACITY
+
+            
+
+            mutex.release()  # Release the lock
+
+            empty.release()  # Signal that there is space in the buffer
+
+            time.sleep(2.5)
+
+            item_consumed += 1
+
+
+
+# Create Producer and Consumer threads
+
+producer = Producer()
+
+consumer = Consumer()
+
+
+
+# Start and join threads
+
+producer.start()
+
+consumer.start()
+
+producer.join()
+
+consumer.join()
+
+Write a program to give a solution to the readers writers program
+
+import threading
+
+
+
+class ReadersWriters:
+
+    def __init__(self):
+
+        self.mutex = threading.Lock()
+
+        self.resource = threading.Lock()
+
+        self.readers = 0
+
+
+
+    def start_read(self):
+
+        self.mutex.acquire()
+
+        self.readers += 1
+
+        if self.readers == 1:
+
+            self.resource.acquire()
+
+        self.mutex.release()
+
+
+
+    def end_read(self):
+
+        self.mutex.acquire()
+
+        self.readers -= 1
+
+        if self.readers == 0:
+
+            self.resource.release()
+
+        self.mutex.release()
+
+
+
+    def start_write(self):
+
+        self.resource.acquire()
+
+
+
+    def end_write(self):
+
+        self.resource.release()
+
+
+
+def reader(rw, reader_id):
+
+    rw.start_read()
+
+    print(f"Reader {reader_id} is reading")
+
+    rw.end_read()
+
+def writer(rw, writer_id):
+
+    rw.start_write()
+
+    print(f"Writer {writer_id} is writing")
+
+    rw.end_write()
+
+if __name__ == "__main__":
+
+    rw = ReadersWriters()
+
+    readers = []
+
+    for i in range(4):
+
+        reader_thread = threading.Thread(target=reader, args=(rw, i + 1))
+
+        readers.append(reader_thread)
+
+
+
+    writers = []
+
+    for i in range(2):
+
+        writer_thread = threading.Thread(target=writer, args=(rw, i + 1))
+
+        writers.append(writer_thread)
+
+    for reader_thread in readers:
+
+        reader_thread.start()
+
+    for writer_thread in writers:
+
+        writer_thread.start()
+
+    for reader_thread in readers:
+
+        reader_thread.join()
+
+    for writer_thread in writers:
+
+        writer_thread.join()
+
+
+
+Write a program that implements fcfs scheduling
+
+
+
+print("FIRST COME FIRST SERVE SCHEDULING")
+
+n = int(input("Enter number of processes: "))
+
+d = {}
+
+
+
+for i in range(n):
+
+    key = "p" + str(i + 1)
+
+    arrival_time = int(input("Enter arrival time of process " + str(i + 1) + ": "))
+
+    burst_time = int(input("Enter burst time of process " + str(i + 1) + ": "))
+
+    d[key] = [arrival_time, burst_time]
+
+
+
+# Sort the dictionary by arrival time
+
+d = sorted(d.items(), key=lambda item: item[1][0])
+
+
+
+# Exit time list
+
+ET = []
+
+# Turnaround time list
+
+TAT = []
+
+# Waiting time list
+
+WT = []
+
+
+
+for i in range(len(d)):
+
+    # First process
+
+    if i == 0:
+
+        ET.append(d[i][1][0] + d[i][1][1])  # arrival time + burst time
+
+    else:
+
+        ET.append(ET[i - 1] + d[i][1][1])  # previous exit time + current burst time
+
+    TAT.append(ET[i] - d[i][1][0])  # exit time - arrival time
+
+    WT.append(TAT[i] - d[i][1][1])  # turnaround time - burst time
+
+
+
+# Calculate average waiting time
+
+avg_WT = sum(WT) / n
+
+
+
+# Display table
+
+print("Process | Arrival | Burst | Exit | Turn Around | Wait |")
+
+for i in range(n):
+
+    print(f"{d[i][0]}       |   {d[i][1][0]}    |   {d[i][1][1]}    |   {ET[i]}    |    {TAT[i]}        |   {WT[i]}    |")
+
+
+
+print(f"Average Waiting Time: {avg_WT}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Write a program that implements the bankers algorithm
+
+def bankers_algo(available, max_claim, allocated):
+
+    num_resources = len(available)
+
+    num_processes = len(max_claim)
+
+
+
+    # Calculate the need matrix
+
+    need = [[max_claim[i][j] - allocated[i][j] for j in range(num_resources)] for i in range(num_processes)]
+
+    work = available.copy()
+
+    finish = [False] * num_processes
+
+    safe_sequence = []
+
+
+
+    while True:
+
+        found_process = False
+
+        for i in range(num_processes):
+
+            if not finish[i] and all(need[i][j] <= work[j] for j in range(num_resources)):
+
+                for j in range(num_resources):
+
+                    work[j] += allocated[i][j]
+
+                finish[i] = True
+
+                safe_sequence.append(i)
+
+                found_process = True
+
+                break
+
+        if not found_process:
+
+            break
+
+
+
+    if all(finish):
+
+        return safe_sequence
+
+    return None
+
+
+
+if __name__ == "__main__":
+
+    available = [3, 3, 2]
+
+    max_claim = [
+
+        [7, 5, 3],
+
+        [3, 2, 2],
+
+        [9, 0, 2],
+
+        [2, 2, 2],
+
+        [4, 3, 3]
+
+    ]
+
+    allocated = [
+
+        [0, 1, 0],
+
+        [2, 0, 0],
+
+        [3, 0, 2],
+
+        [2, 1, 1],
+
+        [0, 0, 2]
+
+    ]
+
+
+
+    safe_sequence = bankers_algo(available, max_claim, allocated)
+
+    if safe_sequence is not None:
+
+        print("Safe sequence is", safe_sequence)
+
+    else:
+
+        print("Unsafe state detected")
+
+
+
+
+
+
+
+
+
+
+
+
+
+Write a program that implements the fifo page replacement algorithm
+
+def fifo_page(pages, capacity):
+
+    pg_frames = []
+
+    pg_faults = 0
+
+
+
+    for page in pages:
+
+        if page not in pg_frames:
+
+            if len(pg_frames) < capacity:
+
+                pg_frames.append(page)
+
+            else:
+
+                pg_frames.pop(0)  # Remove the oldest page
+
+                pg_frames.append(page)  # Add the new page
+
+            pg_faults += 1  # Increment page faults
+
+
+
+    return pg_faults
+
+
+
+def main():
+
+    try:
+
+        capacity = int(input("Enter the capacity of page frame: "))
+
+        pages = list(map(int, input("Enter the reference string (space separated): ").split()))
+
+
+
+        if capacity <= 0:
+
+            print("Capacity must be greater than zero.")
+
+            return
+
+
+
+        pg_faults = fifo_page(pages, capacity)
+
+        print(f"Total page faults: {pg_faults}")
+
+
+
+    except ValueError:
+
+        print("Invalid input. Please enter integers only.")
+
+
+
+if __name__ == "__main__":
+
+    main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Write a program that implements the LRU page replacement algorithm
+
+from collections import deque
+
+
+
+def lru_page(pages, capacity):
+
+    pg_frames = deque()
+
+    pg_set = set()
+
+    pg_faults = 0
+
+
+
+    for page in pages:
+
+        if page not in pg_set:
+
+            if len(pg_frames) >= capacity:
+
+                lru_page = pg_frames.popleft()  # Remove the least recently used page
+
+                pg_set.remove(lru_page)  # Remove it from the set as well
+
+            pg_frames.append(page)  # Add the new page
+
+            pg_set.add(page)  # Add to the set
+
+            pg_faults += 1  # Increment page faults
+
+        else:
+
+            # If the page is already in the frames, we remove it and append it again
+
+            pg_frames.remove(page)  # Remove the page from its current position
+
+            pg_frames.append(page)  # Add it back to mark it as recently used
+
+
+
+    return pg_faults
+
+
+
+def main():
+
+    try:
+
+        capacity = int(input("Enter the capacity of page frames: "))
+
+        pages = list(map(int, input("Enter the reference string (space separated): ").split()))
+
+
+
+        if capacity <= 0:
+
+            print("Capacity must be greater than zero.")
+
+            return
+
+
+
+        pg_faults = lru_page(pages, capacity)
+
+        print(f"Total page faults: {pg_faults}")
+
+
+
+    except ValueError:
+
+        print("Invalid input. Please enter integers only.")
+
+
+
+if __name__ == "__main__":
+
+    main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Write a program to design a file system (Disk Scheduling - RW head )
+
+
+
+
+
+def fcfs_fun(num_list, head):
+
+    next_head = head
+
+    total = 0
+
+    print('Current position --> Next position')
+
+    
+
+    for num in num_list:
+
+        temp = abs(next_head - num)
+
+        print(f"{next_head} --> {num}")
+
+        next_head = num
+
+        total += temp
+
+        
+
+    print(f"Total seek time is: {total}")
+
+    num_list.insert(0, head)  # Optional: Insert head at the beginning for reference
+
+    return num_list, total
+
+
+
+if __name__ == '__main__':
+
+    num_str = input('Enter the sequence of requests: ')
+
+    num_list = []
+
+    
+
+    try:
+
+        num_list = [int(num) for num in num_str.split()]
+
+    except ValueError:
+
+        print("All the sequence numbers should be integers.")
+
+    
+
+    head = int(input("Enter Read/Write arm position: "))
+
+    
+
+    # Call the FCFS function and store the returned values
+
+    _, total = fcfs_fun(num_list, head)
+
